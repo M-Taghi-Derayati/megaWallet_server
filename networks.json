@@ -1,0 +1,93 @@
+[
+  {
+    "id": "sepolia",
+    "name": "SEPOLIA",
+    "networkType": "EVM",
+    "chainId": 11155111,
+    "derivationPath": "m/44'/60'/0'/0/0",
+    "rpcUrls": [
+      "https://sepolia.drpc.org"
+    ],
+    "explorers": [
+      "https://eth-sepolia.blockscout.com/"
+    ],
+    "webSocketUrl": "wss://sepolia.drpc.org",
+    "decimals": 18,
+    "currencySymbol": "ETH",
+    "phoenixContractAddress": "0x5B5cA9728B84BD3929E2594Db6921a345a171a74",
+    "blockExplorerUrl": "https://eth-sepolia.blockscout.com",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png"
+  },
+  {
+    "id": "bsc_testnet",
+    "name": "BSCTESTNET",
+    "networkType": "EVM",
+    "chainId": 97,
+    "derivationPath": "m/44'/60'/0'/0/0",
+    "rpcUrls": [
+      "https://bsc-testnet-rpc.publicnode.com"
+    ],
+    "webSocketUrl": "wss://bsc-testnet.drpc.org",
+    "explorers": [
+      "https://api-testnet.bscscan.com/"
+    ],
+    "decimals": 18,
+    "currencySymbol": "tBNB",
+    "phoenixContractAddress": "0x90b6F0a89b92dCdA2F08490Fff88e33DE45DBcdD",
+    "blockExplorerUrl": "https://testnet.bscscan.com",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png"
+  },
+  {
+    "id": "polygon_testnet",
+    "name": "POLTESTNET",
+    "networkType": "EVM",
+    "chainId": 80002,
+    "derivationPath": "m/44'/60'/0'/0/0",
+    "rpcUrls": [
+      "https://polygon-amoy-bor-rpc.publicnode.com"
+    ],
+    "webSocketUrl": "wss://polygon-amoy.drpc.org",
+    "explorers": [
+      "https://polygon.blockscout.com/api/v2"
+    ],
+    "decimals": 18,
+    "currencySymbol": "POL",
+    "phoenixContractAddress": "",
+    "blockExplorerUrl": "https://amoy.polygonscan.com/api",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/28321.png"
+  },
+  {
+    "id": "bitcoin_mainnet",
+    "name": "BITCOIN",
+    "networkType": "BITCOIN",
+    "chainId": 0,
+    "derivationPath": "m/84'/1'/0'/0/{index}",
+    "rpcUrls": [],
+    "webSocketUrl": "wss://mempool.space/api/v1/ws",
+    "explorers": [
+      "https://mempool.space/api/"
+    ],
+    "decimals": 8,
+    "currencySymbol": "BTC",
+    "phoenixContractAddress": "",
+    "blockExplorerUrl": "https://mempool.space",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1.png"
+  },
+  {
+    "id": "bitcoin_testnet",
+    "name": "BITCOINTESTNET",
+    "networkType": "BITCOIN",
+    "chainId": -1,
+    "derivationPath": "0/{index}",
+    "rpcUrls": [],
+    "webSocketUrl": "wss://mempool.space/testnet/api/v1/ws",
+    "explorers": [
+      "https://mempool.space/testnet/api/"
+    ],
+    "decimals": 8,
+    "currencySymbol": "BTC",
+    "phoenixContractAddress": "",
+    "blockExplorerUrl": "https://mempool.space/testnet",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1.png"
+  }
+]

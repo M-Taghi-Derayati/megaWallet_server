@@ -1,0 +1,36 @@
+{
+  "name": "megawallet_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "node dist/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "@types/express": "^5.0.3",
+    "axios": "^1.11.0",
+    "bip32": "^5.0.0-rc.0",
+    "bip39": "^3.1.0",
+    "bitcoinjs-lib": "^6.1.7",
+    "dotenv": "^17.2.2",
+    "ecpair": "^3.0.0",
+    "ethers": "^6.15.0",
+    "express": "^5.1.0",
+    "prisma": "^6.15.0",
+    "tiny-secp256k1": "^2.2.4",
+    "typescript": "^5.9.2",
+    "uuid": "^12.0.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2"
+  }
+}

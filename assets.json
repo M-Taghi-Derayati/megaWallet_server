@@ -1,0 +1,83 @@
+[
+  {
+    "id": "BTC-BITCOIN_TESTNET",
+    "name": "Bitcoin",
+    "symbol": "BTC",
+    "decimals": 8,
+    "networkId": "bitcoin_testnet",
+    "contractAddress": null,
+    "coinGeckoId": "bitcoin",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1.png"
+  },
+  {
+    "id": "ETH-SEPOLIA",
+    "name": "Sepolia Ether",
+    "symbol": "ETH",
+    "decimals": 18,
+    "networkId": "sepolia",
+    "contractAddress": null,
+    "coinGeckoId": "ethereum",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png"
+  },
+  {
+    "id": "USDC-SEPOLIA",
+    "name": "USD Coin",
+    "symbol": "USDC",
+    "decimals": 6,
+    "networkId": "sepolia",
+    "contractAddress": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "coinGeckoId": "usd-coin",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png"
+  },
+  {
+    "id": "USDT-SEPOLIA",
+    "name": "Tether",
+    "symbol": "USDT",
+    "decimals": 6,
+    "networkId": "sepolia",
+    "contractAddress": "0x186cca6904490818AB0DC409ca59D932A2366031",
+    "coinGeckoId": "usd-coin",
+    "iconUrl": "https://assets.coingecko.com/coins/images/325/standard/Tether.png?1696501661"
+  },
+  {
+    "id": "USDT-BSC_TESTNET",
+    "name": "Tether",
+    "symbol": "USDT",
+    "decimals": 6,
+    "networkId": "bsc_testnet",
+    "contractAddress": "0x6Ef1f996008b0EF1f29aA1Bf67C59747713f760d",
+    "coinGeckoId": "usd-coin",
+    "iconUrl": "https://assets.coingecko.com/coins/images/325/standard/Tether.png?1696501661"
+  },
+  {
+    "id": "USDT-POLYGON_TESTNET",
+    "name": "Tether",
+    "symbol": "USDT",
+    "decimals": 6,
+    "networkId": "polygon_testnet",
+    "contractAddress": "0x00C4a847164dF1b3BEc394A889337F3AbE161186",
+    "coinGeckoId": "usd-coin",
+    "iconUrl": "https://assets.coingecko.com/coins/images/325/standard/Tether.png?1696501661"
+  },
+
+  {
+    "id": "POLYGON",
+    "name": "Polygon",
+    "symbol": "POL",
+    "decimals": 18,
+    "networkId": "polygon_testnet",
+    "contractAddress": null,
+    "coinGeckoId": "usd-coin",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/28321.png"
+  },
+  {
+    "id": "BNB-BSC_TESTNET",
+    "name": "Testnet BNB",
+    "symbol": "BNB",
+    "decimals": 18,
+    "networkId": "bsc_testnet",
+    "contractAddress": null,
+    "coinGeckoId": "binancecoin",
+    "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png"
+  }
+]

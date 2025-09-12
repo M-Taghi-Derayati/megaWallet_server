@@ -1,0 +1,72 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model Quote {
+  id                String    @id @default(uuid())
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime
+
+  fromAssetId       String
+  toAssetId         String
+
+  fromAmount        Decimal   @db.Decimal(30, 18) // مقدار ورودی کاربر
+  fromAssetSymbol   String    // <<-- فیلد جدید
+  fromNetworkId     String    // <<-- فیلد جدید و حیاتی
+  toAssetSymbol     String    // <<-- فیلد جدید
+  bestExchange      String    // <<-- فیلد جدید
+  finalReceiveAmount Decimal  @db.Decimal(30, 18) // مقدار نهایی که کاربر دریافت می‌کند
+  grossReceiveAmount Decimal @db.Decimal(30, 18)
+  exchangeRate      Decimal   @db.Decimal(30, 18) // نرخ تبدیل موثر
+
+  recipientAddress String?
+  toNetworkId      String?
+
+  // ذخیره جزئیات کارمزد برای تحلیل‌های بعدی
+  exchangeFee       Decimal   @db.Decimal(30, 18)
+  ourFee            Decimal   @db.Decimal(30, 18)
+  gasCosts          Decimal   @db.Decimal(30, 18)
+  
+  trade             Trade?    // ارتباط یک-به-یک با معامله
+  depositAddress    BitcoinDepositAddress?
+}
+
+model Trade {
+  id                String    @id @default(uuid())
+  createdAt         DateTime  @default(now())
+  status            String    // e.g., "PENDING", "PROCESSING", "COMPLETED", "FAILED"
+  
+  quoteId           String    @unique
+  quote             Quote     @relation(fields: [quoteId], references: [id])
+
+  // جزئیات اجرای معامله
+  txHashContractCall String?  // هش تراکنش فراخوانی قرارداد هوشمند
+  txHashFinalTransfer String? // هش تراکنش ارسال نهایی به کاربر
+  failureReason     String?
+}
+
+model BitcoinDepositAddress {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  address   String   @unique // آدرس بیت‌کوین تولید شده
+  path      String   // مسیر مشتق‌سازی از کیف پول HD (e.g., "m/0/15")
+
+  quoteId   String   @unique   // به کدام پیش‌فاکتور مرتبط است
+  quote     Quote    @relation(fields: [quoteId], references: [id])
+
+  status    String   // وضعیت: PENDING_DEPOSIT, CONFIRMED, EXPIRED
+
+  receivedTxHash String?  // هش تراکنش واریزی کاربر
+  receivedAmount Decimal? @db.Decimal(30, 8) // مقدار بیت‌کوین دریافت شده
+}
+
+model HdWalletState {
+  id        String @id // e.g., "BITCOIN_TESTNET"
+  nextIndex Int    @default(0)
+}
