@@ -103,29 +103,47 @@ export class DepositMonitorWorker {
                         const receivedAmountSatoshi = this.calculateReceivedAmount(tx, addr.address);
 
                         if (receivedAmountSatoshi > 0) {
-                            console.log(`[Monitor] ✅ CONFIRMED deposit of ${receivedAmountSatoshi} sats found for address ${addr.address}! TxHash: ${tx.txid}`);
 
+                            // --- بخش کلیدی و حیاتی برای جلوگیری از پردازش مجدد ---
+                            console.log(`[Monitor] Found confirmed deposit for ${addr.address}. Locking record...`);
+
+                            // ما در یک تراکنش دیتابیسی، وضعیت را فقط در صورتی آپدیت می‌کنیم
+                            // که هنوز 'PENDING_DEPOSIT' باشد.
+                            const updateResult = await prisma.bitcoinDepositAddress.updateMany({
+                                where: {
+                                    id: addr.id,
+                                    status: 'PENDING_DEPOSIT', // <<<--- شرط قفل‌گذاری
+                                },
+                                data: {
+                                    status: 'CONFIRMED', // <<<--- تغییر وضعیت
+                                    receivedTxHash: tx.txid,
+                                    receivedAmount: receivedAmountSatoshi / 1e8,
+                                },
+                            });
+
+                            // اگر هیچ رکوردی آپدیت نشد (count === 0)، یعنی یک اجرای دیگر
+                            // از Worker این رکورد را زودتر پردازش کرده است. پس خارج می‌شویم.
+                            if (updateResult.count === 0) {
+                                console.log(`[Monitor] Address ${addr.address} was already processed. Skipping.`);
+                                return; // <<-- خروج برای جلوگیری از اجرای مجدد
+                            }
+                            // --- پایان بخش کلیدی ---
+
+                            console.log(`[Monitor] ✅ CONFIRMED and locked deposit for ${addr.address}! TxHash: ${tx.txid}`);
+
+                            // اطلاع‌رسانی به کلاینت
                             getWebSocketManager().broadcast({
                                 type: 'DEPOSIT_CONFIRMED',
                                 quoteId: addr.quoteId,
                                 txHash: tx.txid,
-                                amount: receivedAmountSatoshi
-                            });
-
-
-                            // وضعیت را در دیتابیس آپدیت می‌کنیم
-                            await prisma.bitcoinDepositAddress.update({
-                                where: {id: addr.id},
-                                data: {
-                                    status: 'CONFIRMED',
-                                    receivedTxHash: tx.txid,
-                                    receivedAmount: receivedAmountSatoshi / 1e8, // تبدیل به BTC
-                                },
+                                amount: receivedAmountSatoshi / 1e8,
+                                asset: 'BTC'
                             });
 
                             // سرویس اجرای معامله را فراخوانی می‌کنیم
                             // اینجا دیگر نیازی به await نیست، چون می‌خواهیم Worker به کار خود ادامه دهد
                             await utxoTradeExecutionService.initiateSwap(addr.quoteId, receivedAmountSatoshi / 1e8);
+
 
                             return; // از پردازش بیشتر این آدرس خارج می‌شویم
                         }
