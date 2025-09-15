@@ -572,7 +572,8 @@ export class QuotingService {
             }
             finalReceiveAmountForDB = responseJson.receivingOptions[0].finalAmount;
             finalToNetworkIdForDB = responseJson.receivingOptions[0].networkId;
-        } else if (targetNetwork.networkType === 'BITCOIN') {
+        }
+        else if (targetNetwork.networkType === 'BITCOIN') {
             // ... (منطق این بخش بدون تغییر)
             if (!toNetworkId || !recipientAddress) {
                 throw new Error("toNetworkId and recipientAddress are mandatory for Bitcoin destination.");
@@ -589,7 +590,8 @@ export class QuotingService {
                     exchangeFee: { amount: baseFees.exchangeFee.toFixed(8), asset: toAssetSymbol },
                     ourFee: { amount: baseFees.ourFee.toFixed(8), asset: toAssetSymbol },
                     sourceNetworkGasFee: { amount: baseFees.sourceGasCost.cost.toFixed(8), asset: baseFees.sourceGasCost.asset },
-                    destinationNetworkFee: { amount: btcPayoutFeeInToAsset.toFixed(8), asset: "BTC" }
+                    destinationNetworkFee: { amount: btcPayoutFeeInToAsset.toFixed(8), asset: "BTC" },
+                    iconUrl:""
                 }
             };
             finalReceiveAmountForDB = responseJson.finalReceiveAmount;
@@ -658,13 +660,13 @@ export class QuotingService {
             const destGasCostInToAsset = await this.getConversionRate(destGasCost.asset, toAssetSymbol) * destGasCost.cost;
             const finalAmount = finalAmountBase - destGasCostInToAsset;
             const totalFeeForThisOptionInUsd = await this.calculateTotalFeeInUsd(baseFees, toAssetSymbol, destGasCost);
-
             receivingOptions.push({
                 networkId: network.id,
                 networkName: network.name,
                 fees: {
                     totalFeeInUsd: totalFeeForThisOptionInUsd.toFixed(4),
                     details: {
+                        iconUrl:network.iconUrl,
                         exchangeFee: { amount: baseFees.exchangeFee.toFixed(8), asset: toAssetSymbol },
                         ourFee: { amount: baseFees.ourFee.toFixed(8), asset: toAssetSymbol },
                         sourceNetworkGasFee: { amount: baseFees.sourceGasCost.cost.toFixed(8), asset: baseFees.sourceGasCost.asset },

@@ -14,6 +14,7 @@ export interface NetworkConfig {
     decimals:number
     derivationPath:string
     explorers:string[]
+    iconUrl:string
     // ... سایر فیلدهای فایل networks.json
 }
 
