@@ -43,9 +43,9 @@
     "id": "USDT-BSC_TESTNET",
     "name": "Tether",
     "symbol": "USDT",
-    "decimals": 6,
+    "decimals": 18,
     "networkId": "bsc_testnet",
-    "contractAddress": "0x6Ef1f996008b0EF1f29aA1Bf67C59747713f760d",
+    "contractAddress": "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd",
     "coinGeckoId": "usd-coin",
     "iconUrl": "https://assets.coingecko.com/coins/images/325/standard/Tether.png?1696501661"
   },
