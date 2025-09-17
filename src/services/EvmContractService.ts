@@ -174,7 +174,8 @@ export class EvmContractService {
         try {
             // فراخوانی تابع `execute` در قرارداد Forwarder
             const tx = await forwarderContract.execute(request, signature, {
-                gasLimit: 500000 // یک gas limit بالا برای اطمینان
+                gasLimit: 500000, // یک gas limit بالا برای اطمینان
+                value: request.value
             });
 
             console.log(`[Meta-TX] Transaction sent to mempool. Hash: ${tx.hash}`);
