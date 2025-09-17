@@ -1,6 +1,8 @@
 import { ethers, Wallet, Contract } from 'ethers';
 import { BlockchainRegistry } from '../config/BlockchainRegistry';
 import PhoenixContractAbi from '../abi/phoenixAbi.json';
+import MinimalForwarderAbi from '../abi/MinimalForwarder.json';
+import { ForwardRequest } from './MetaTxService';
 
 // اینترفیس برای پارامترهای Permit
 interface PermitParams {
@@ -143,4 +145,65 @@ export class EvmContractService {
             throw new Error(`On-chain transaction failed: ${error.reason || 'Unknown error'}`);
         }
     }
+
+    /**
+     * یک Meta-Transaction را از طریق قرارداد Forwarder به شبکه ارسال می‌کند.
+     */
+    public async executeMetaTransaction(
+        chainId: number,
+        request: ForwardRequest,
+        signature: string // امضای کامل به صورت هگز
+    ): Promise<string> { // برگرداندن هش تراکنش
+
+        const network = this.registry.getNetworkByChainId(chainId);
+        if (!network || !network.forwarderContractAddress) {
+            throw new Error(`Forwarder for chainId ${chainId} is not configured.`);
+        }
+
+        // ما به یک wallet برای ارسال تراکنش نیاز داریم
+        const ownerWallet = this.getOwnerWallet(chainId);
+
+        const forwarderContract = new Contract(
+            network.forwarderContractAddress,
+            MinimalForwarderAbi,
+            ownerWallet
+        );
+
+        console.log(`[Meta-TX] Relaying transaction for user ${request.from} via Forwarder...`);
+
+        try {
+            // فراخوانی تابع `execute` در قرارداد Forwarder
+            const tx = await forwarderContract.execute(request, signature, {
+                gasLimit: 500000 // یک gas limit بالا برای اطمینان
+            });
+
+            console.log(`[Meta-TX] Transaction sent to mempool. Hash: ${tx.hash}`);
+            console.log("Waiting for transaction to be mined...");
+
+            const receipt = await tx.wait(1);
+            if (receipt.status !== 1) {
+                throw new Error(`Meta-transaction reverted on-chain. Status: ${receipt.status}`);
+            }
+
+            console.log(`✅ Meta-transaction successfully mined in block ${receipt.blockNumber}.`);
+            return tx.hash;
+
+        } catch (error: any) {
+            console.error("❌ Error executing meta-transaction:", error.message);
+
+            // تلاش برای استخراج دلیل revert از خطا
+            const reason = error.reason || 'Unknown error';
+            // چک کردن خطاهای رایج Forwarder
+            if (reason.includes("invalid signature")) {
+                throw new Error("Meta-transaction failed: The provided signature is invalid.");
+            }
+            if (reason.includes("invalid nonce")) {
+                throw new Error("Meta-transaction failed: Invalid nonce. The user may have submitted another transaction.");
+            }
+
+            throw new Error(`On-chain meta-transaction failed: ${reason}`);
+        }
+    }
+
+
 }

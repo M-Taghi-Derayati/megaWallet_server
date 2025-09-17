@@ -7,6 +7,7 @@ import { BitcoinPayoutService } from './BitcoinPayoutService';
 import { AssetRegistry } from '../config/AssetRegistry'; // <<<--- ایمپورت جدید
 import { PayoutService } from './PayoutService';
 import { getWebSocketManager } from '../websocket/WebSocketManager';
+import {ForwardRequest} from "./MetaTxService";
 
 // تعریف اینترفیس‌ها برای ساختار داده ورودی جهت خوانایی و Type-Safety
 interface PermitParameters {
@@ -220,6 +221,52 @@ export class TradeExecutionService {
         return quote;
     }
 
+    public async executeNativeSwap(quoteId: string, request: ForwardRequest, signature: string): Promise<string> {
+        const quote = await this.validateQuote(quoteId);
+
+        // پیدا کردن chainId از روی quote
+        const fromNetwork = this.registry.getNetworkById(quote.fromNetworkId)!;
+        const sourceChainId = fromNetwork.chainId!;
+
+        // ایجاد رکورد Trade
+        const trade = await prisma.trade.create({
+            data: { quoteId: quote.id, status: 'PENDING' }
+        });
+        console.log(`[Trade ${trade.id}] Created for Native Swap with status PENDING.`);
+
+        try {
+            // ۱. ارسال Meta-Transaction به بلاک‌چین
+            const txHash = await this.evmContractService.executeMetaTransaction(
+                sourceChainId,
+                request,
+                signature
+            );
+
+            // ۲. شبیه‌سازی مراحل بعدی (صرافی و پرداخت)
+            console.log(`[Trade ${trade.id}] [SIMULATION] Executing trade on exchange: ${quote.bestExchange}...`);
+            console.log(`[Trade ${trade.id}] [SIMULATION] Transferring final amount...`);
+            const fakeFinalTxHash = `0x_fake_final_tx_hash_${Date.now()}`;
+
+            // ۳. آپدیت نهایی Trade
+            await prisma.trade.update({
+                where: { id: trade.id },
+                data: {
+                    status: 'COMPLETED',
+                    txHashContractCall: txHash,
+                    txHashFinalTransfer: fakeFinalTxHash,
+                }
+            });
+
+            console.log(`✅ [Trade ${trade.id}] Native swap completed successfully.`);
+            return trade.id;
+
+        } catch (error) {
+            // ... (error handling)
+            throw error;
+        }
+    }
+
+
     private async convertAmount(amount: number, fromAsset: string, toAsset: string): Promise<number> {
         if (fromAsset.toUpperCase() === toAsset.toUpperCase()) {
             return amount;
@@ -237,4 +284,6 @@ export class TradeExecutionService {
         const valueInUsd = amount * fromPriceUsd;
         return valueInUsd / toPriceUsd;
     }
+
+
 }

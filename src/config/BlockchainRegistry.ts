@@ -15,6 +15,7 @@ export interface NetworkConfig {
     derivationPath:string
     explorers:string[]
     iconUrl:string
+    forwarderContractAddress:string
     // ... سایر فیلدهای فایل networks.json
 }
 
