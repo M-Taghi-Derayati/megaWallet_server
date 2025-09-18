@@ -56,7 +56,7 @@ export class EvmContractService {
         return new Contract(network.phoenixContractAddress, PhoenixContractAbi, ownerWallet);
     }
 
-    /**
+ /*   /!**
      * تابع executeTradeWithPermit را روی قرارداد هوشمند مربوط به شبکه مشخص شده
      * فراخوانی کرده، تراکنش را به شبکه ارسال می‌کند و منتظر تایید آن می‌ماند.
      *
@@ -64,7 +64,7 @@ export class EvmContractService {
      * @param params پارامترهای امضای Permit از کلاینت.
      * @param chainId شناسه زنجیره شبکه مبدا.
      * @returns هش تراکنش واقعی (Transaction Hash) در صورت موفقیت.
-     */
+     *!/
     public async executeTrade(quoteId: string, params: PermitParams, chainId: number): Promise<{ txHash: string, receipt: ethers.TransactionReceipt}> {
         console.log(`Executing REAL trade on chainId: ${chainId}`);
 
@@ -81,6 +81,26 @@ export class EvmContractService {
             const feeData = await contract.runner!!.provider!!.getFeeData();
             const gasPrice = feeData.gasPrice;
 
+            const txRequest = await contract.executeTradeWithPermit.populateTransaction(
+                params.tokenAddress,
+                params.userAddress,
+                params.amount,
+                params.deadline,
+                quoteIdBytes32,
+                params.v,
+                params.r,
+                params.s
+            );
+
+            // اضافه کردن پارامترهای Gas به تراکنش
+            txRequest.gasLimit = 250000;
+            const feeData = await this.getOwnerWallet(chainId).provider!.getFeeData();
+            txRequest.gasPrice = (feeData.gasPrice! * BigInt(120)) / BigInt(100); // 20% boost
+
+
+            console.log("Populated Transaction:", txRequest); // <<-- لاگ برای دیباگ
+// حالا تراکنش کامل را با استفاده از کیف پول ادمین ارسال می‌کنیم.
+            const txResponse = await this.getOwnerWallet(chainId).sendTransaction(txRequest);
             if (!gasPrice) {
                 throw new Error("Could not fetch gas price from the network.");
             }
@@ -142,6 +162,78 @@ export class EvmContractService {
             if (error.reason) console.error("   - Revert Reason:", error.reason);
 
             // برگرداندن یک پیام خطای قابل فهم‌تر برای کلاینت
+            throw new Error(`On-chain transaction failed: ${error.reason || 'Unknown error'}`);
+        }
+    }
+*/
+
+    /**
+     * تابع executeTradeWithPermit را روی قرارداد هوشمند مربوط به شبکه مشخص شده
+     * فراخوانی کرده، تراکنش را به شبکه ارسال می‌کند و منتظر تایید آن می‌ماند.
+     * این نسخه از روش "populate + send" برای حداکثر کنترل و پایداری استفاده می‌کند.
+     */
+    public async executeTrade(quoteId: string, params: PermitParams, chainId: number): Promise<{ txHash: string, receipt: ethers.TransactionReceipt }> {
+        console.log(`Executing REAL trade on chainId: ${chainId}`);
+
+        try {
+            // ۱. دریافت آبجکت‌های لازم
+            const contract = this.getPhoenixContract(chainId);
+            const ownerWallet = this.getOwnerWallet(chainId);
+
+            // ۲. تبدیل quoteId به فرمت bytes32
+            const quoteIdBytes32 = ethers.encodeBytes32String(quoteId.substring(0, 31));
+
+            // ۳. ساخت تراکنش خام (امضا نشده) با calldata صحیح
+            console.log("Populating transaction to generate calldata...");
+            const txRequest = await contract.executeTradeWithPermit.populateTransaction(
+                params.tokenAddress,
+                params.userAddress,
+                params.amount,
+                params.deadline,
+                quoteIdBytes32,
+                params.v,
+                params.r,
+                params.s
+            );
+
+            // ۴. دریافت قیمت Gas و افزایش آن برای اولویت بیشتر
+            const feeData = await ownerWallet.provider!.getFeeData();
+            if (!feeData.gasPrice) {
+                throw new Error("Could not fetch gas price from the network.");
+            }
+            const boostedGasPrice = (feeData.gasPrice * BigInt(120)) / BigInt(100); // 20% boost
+
+            // ۵. تکمیل آبجکت تراکنش با پارامترهای Gas
+            txRequest.gasLimit = 250000n;
+            txRequest.gasPrice = boostedGasPrice;
+
+            console.log(`   - Base Gas Price: ${ethers.formatUnits(feeData.gasPrice, 'gwei')} Gwei`);
+            console.log(`   - Boosted Gas Price: ${ethers.formatUnits(boostedGasPrice, 'gwei')} Gwei`);
+            console.log("Final Transaction Request to be sent:", txRequest);
+
+            // ۶. ارسال تراکنش کامل و امضا شده به شبکه
+            const txResponse = await ownerWallet.sendTransaction(txRequest);
+            console.log(`Transaction sent to mempool. Hash: ${txResponse.hash}`);
+            console.log("Waiting for transaction to be mined (this may take a moment)...");
+
+            // ۷. منتظر ماندن برای تایید تراکنش (با Timeout)
+            const receipt = await txResponse.wait(1); // منتظر ۱ بلاک تایید
+
+            if (!receipt) {
+                throw new Error("Transaction receipt was null, wait may have timed out.");
+            }
+
+            if (receipt.status !== 1) {
+                console.error(`❌ Transaction reverted on-chain. Receipt:`, receipt);
+                throw new Error(`Transaction failed on-chain with status 0.`);
+            }
+
+            console.log(`✅ Transaction successfully mined in block ${receipt.blockNumber}.`);
+            return { txHash: txResponse.hash, receipt: receipt };
+
+        } catch (error: any) {
+            console.error("❌ Error executing contract call:", error.message);
+            if (error.reason) console.error("   - Revert Reason:", error.reason);
             throw new Error(`On-chain transaction failed: ${error.reason || 'Unknown error'}`);
         }
     }
