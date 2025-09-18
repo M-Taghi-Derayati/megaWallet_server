@@ -243,15 +243,25 @@ export class TradeExecutionService {
             );
 
             // ۲. محاسبه مجدد مقدار نهایی (بدون تغییر)
+
+
+
+            const toNetwork = this.registry.getNetworkById(quote.toNetworkId!!)!;
+            const toAssetConfig = this.assetRegistry.getAssetBySymbol(quote.toAssetSymbol, quote.toNetworkId!)!;
             const finalAmountToSend = parseFloat(quote.finalReceiveAmount.toString());
+
+
+
+
+            const decimals = toAssetConfig.decimals;
+            const roundedAmount = Math.floor(finalAmountToSend * (10 ** decimals)) / (10 ** decimals);
+            const amountToSendString = roundedAmount.toFixed(decimals);
 
             // ۳. شبیه‌سازی معامله در صرافی (بدون تغییر)
             console.log(`[Trade ${trade.id}] [SIMULATION] Executing trade on exchange: ${quote.bestExchange}...`);
 
             // --- مرحله ۴: اجرای پرداخت نهایی واقعی (نسخه کامل و بازنویسی شده) ---
-            console.log(`[Trade ${trade.id}] Initiating REAL payout of ${finalAmountToSend} ${quote.toAssetSymbol}...`);
-
-            const toNetwork = this.registry.getNetworkById(quote.toNetworkId!!)!;
+            console.log(`[Trade ${trade.id}] Initiating REAL payout of ${amountToSendString} ${quote.toAssetSymbol}...`);
 
             let finalTxHash: string;
 
@@ -261,18 +271,20 @@ export class TradeExecutionService {
                 const toAssetConfig = this.assetRegistry.getAssetBySymbol(quote.toAssetSymbol, quote.toNetworkId!!)!;
                 if (toAssetConfig.contractAddress) {
                     finalTxHash = await this.payoutService.sendErc20Token(
-                        toNetwork.chainId, quote.toAssetSymbol, quote.recipientAddress!!, finalAmountToSend.toString()
+                        toNetwork.chainId, quote.toAssetSymbol, quote.recipientAddress!!, amountToSendString
                     );
                 } else {
                     finalTxHash = await this.payoutService.sendNativeToken(
-                        toNetwork.chainId, quote.recipientAddress!!, finalAmountToSend.toString()
+                        toNetwork.chainId, quote.recipientAddress!!, amountToSendString
                     );
                 }
             } else if (toNetwork.networkType === 'BITCOIN') {
+                // (این بخش نیاز به گرد کردن جداگانه به ساتوشی دارد)
+                const amountBtcRounded = parseFloat(finalAmountToSend.toFixed(8)); // بیت‌کوین ۸ رقم اعشار دارد
                 // **مقصد یک شبکه بیت‌کوین است**
                 finalTxHash = await this.bitcoinPayoutService.sendBitcoin(
                     quote.recipientAddress!!,
-                    finalAmountToSend
+                    amountBtcRounded
                 );
             } else {
                 throw new Error(`Unsupported destination network type for payout: ${toNetwork.networkType}`);
