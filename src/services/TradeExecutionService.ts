@@ -242,30 +242,63 @@ export class TradeExecutionService {
                 signature
             );
 
-            // ۲. شبیه‌سازی مراحل بعدی (صرافی و پرداخت)
-            console.log(`[Trade ${trade.id}] [SIMULATION] Executing trade on exchange: ${quote.bestExchange}...`);
-            console.log(`[Trade ${trade.id}] [SIMULATION] Transferring final amount...`);
-            const fakeFinalTxHash = `0x_fake_final_tx_hash_${Date.now()}`;
+            // ۲. محاسبه مجدد مقدار نهایی (بدون تغییر)
+            const finalAmountToSend = parseFloat(quote.finalReceiveAmount.toString());
 
-            // ۳. آپدیت نهایی Trade
+            // ۳. شبیه‌سازی معامله در صرافی (بدون تغییر)
+            console.log(`[Trade ${trade.id}] [SIMULATION] Executing trade on exchange: ${quote.bestExchange}...`);
+
+            // --- مرحله ۴: اجرای پرداخت نهایی واقعی (نسخه کامل و بازنویسی شده) ---
+            console.log(`[Trade ${trade.id}] Initiating REAL payout of ${finalAmountToSend} ${quote.toAssetSymbol}...`);
+
+            const toNetwork = this.registry.getNetworkById(quote.toNetworkId!!)!;
+
+            let finalTxHash: string;
+
+            // **بخش کلیدی: تشخیص نوع شبکه مقصد**
+            if (toNetwork.networkType === 'EVM' && toNetwork.chainId) {
+                // **مقصد یک شبکه EVM است**
+                const toAssetConfig = this.assetRegistry.getAssetBySymbol(quote.toAssetSymbol, quote.toNetworkId!!)!;
+                if (toAssetConfig.contractAddress) {
+                    finalTxHash = await this.payoutService.sendErc20Token(
+                        toNetwork.chainId, quote.toAssetSymbol, quote.recipientAddress!!, finalAmountToSend.toString()
+                    );
+                } else {
+                    finalTxHash = await this.payoutService.sendNativeToken(
+                        toNetwork.chainId, quote.recipientAddress!!, finalAmountToSend.toString()
+                    );
+                }
+            } else if (toNetwork.networkType === 'BITCOIN') {
+                // **مقصد یک شبکه بیت‌کوین است**
+                finalTxHash = await this.bitcoinPayoutService.sendBitcoin(
+                    quote.recipientAddress!!,
+                    finalAmountToSend
+                );
+            } else {
+                throw new Error(`Unsupported destination network type for payout: ${toNetwork.networkType}`);
+            }
+            // --- پایان بخش کلیدی ---
+
+            // ۵. آپدیت نهایی Trade
             await prisma.trade.update({
                 where: { id: trade.id },
                 data: {
                     status: 'COMPLETED',
                     txHashContractCall: txHash,
-                    txHashFinalTransfer: fakeFinalTxHash,
+                    txHashFinalTransfer: finalTxHash,
                 }
             });
 
             console.log(`✅ [Trade ${trade.id}] Native swap completed successfully.`);
+            // ... (ارسال رویداد WebSocket)
             return trade.id;
+
 
         } catch (error) {
             // ... (error handling)
             throw error;
         }
     }
-
 
     private async convertAmount(amount: number, fromAsset: string, toAsset: string): Promise<number> {
         if (fromAsset.toUpperCase() === toAsset.toUpperCase()) {
