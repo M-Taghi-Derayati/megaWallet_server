@@ -385,131 +385,6 @@ export class QuotingService {
     }
 
 
- /*   private async buildFinalResponse(
-        fromAmount: number,
-        fromAssetSymbol: string,
-        fromNetworkId: string,
-        toAssetSymbol: string,
-        toNetworkId: string | undefined, // ممکن است در حالت EVM تعریف نشده باشد
-        recipientAddress: string | undefined,
-        quoteResult: QuoteResult,
-        baseFees: QuoteFeeDetails,
-        finalAmountBase: number
-    ) {
-        const quoteId = uuidv4();
-        const expiresAt = new Date(Date.now() + 300000).toISOString(); // ۵ دقیقه انقضا
-
-
-
-        let exchangeRate: number;
-        const {tradeDirection} = this.determineSymbolAndDirection(fromAssetSymbol, toAssetSymbol);
-        if (quoteResult.grossReceiveAmount > 0 && quoteResult.costInFromAsset > 0) {
-            if (tradeDirection === 'buy') {
-                exchangeRate = quoteResult.costInFromAsset / quoteResult.grossReceiveAmount;
-            } else { // tradeDirection === 'sell'
-
-                exchangeRate = quoteResult.grossReceiveAmount / quoteResult.costInFromAsset;
-            }
-        } else {
-            exchangeRate = 0;
-        }
-
-        const responseJson: any = {
-            quoteId: quoteId,
-            fromAmount: fromAmount.toString(),
-            fromAssetSymbol: fromAssetSymbol,
-            bestExchange: quoteResult.exchangeName,
-            exchangeRate: exchangeRate.toFixed(8),
-            expiresAt: expiresAt
-        };
-
-        // پیدا کردن نوع شبکه مقصد
-        const toAssetDeployments = this.assetRegistry.getAssetDeployments(toAssetSymbol);
-        if (toAssetDeployments.length === 0) throw new Error(`Asset ${toAssetSymbol} not supported.`);
-        const primaryDeployment = toAssetDeployments[0];
-        const targetNetwork = this.blockchainRegistry.getNetworkById(primaryDeployment.networkId)!;
-
-        let finalReceiveAmountForDB: string;
-        let finalToNetworkIdForDB: string;
-
-
-
-        if (targetNetwork.networkType === 'EVM') {
-            // --- حالت ۱: مقصد یک شبکه EVM است ---
-            responseJson.receivingOptions = await this.buildEvmReceivingOptions(toAssetSymbol, finalAmountBase, baseFees);
-
-            if (responseJson.receivingOptions.length === 0) {
-                throw new Error(`No available EVM networks to receive ${toAssetSymbol}.`);
-            }
-
-            // اولین گزینه را برای ذخیره در دیتابیس انتخاب می‌کنیم
-            finalReceiveAmountForDB = responseJson.receivingOptions[0].finalAmount;
-            finalToNetworkIdForDB = responseJson.receivingOptions[0].networkId;
-
-        } else if (targetNetwork.networkType === 'BITCOIN') {
-            // --- حالت ۲: مقصد یک شبکه بیت‌کوین است ---
-            if (!toNetworkId || !recipientAddress) {
-                throw new Error("toNetworkId and recipientAddress are mandatory for Bitcoin destination.");
-            }
-
-            const btcPayoutFeeBtc = 0.00005; // کارمزد تخمینی برای ارسال بیت‌کوین (باید داینامیک شود)
-            const btcPayoutFeeInToAsset = btcPayoutFeeBtc//await this.getConversionRate("BTC", toAssetSymbol) * btcPayoutFeeBtc;
-
-
-            const finalAmount = finalAmountBase - btcPayoutFeeInToAsset;
-            responseJson.finalReceiveAmount = finalAmount.toFixed(8);
-            responseJson.receivingOptions = [];
-            const totalFeeInUsd = await this.calculateTotalFeeInUsd(baseFees, toAssetSymbol, { cost: btcPayoutFeeBtc, asset: "BTC" });
-
-            responseJson.fees = {
-                totalFeeInUsd: totalFeeInUsd.toFixed(4),
-                details: {
-                    exchangeFee: { amount: baseFees.exchangeFee.toFixed(8), asset: toAssetSymbol },
-                    ourFee: { amount: baseFees.ourFee.toFixed(8), asset: toAssetSymbol },
-                    sourceNetworkGasFee: { amount: baseFees.sourceGasCost.cost.toFixed(8), asset: baseFees.sourceGasCost.asset },
-                    destinationNetworkFee: { amount: btcPayoutFeeBtc.toFixed(8), asset: "BTC" }
-                }
-            };
-            finalReceiveAmountForDB = responseJson.finalReceiveAmount;
-            finalToNetworkIdForDB = toNetworkId;
-
-        } else {
-            throw new Error(`Unsupported destination asset type: ${targetNetwork.networkType}`);
-        }
-
-        // --- ذخیره در دیتابیس ---
-        try {
-            await prisma.quote.create({
-                data: {
-                    id: quoteId,
-                    expiresAt: expiresAt,
-                    fromAssetId: `${fromAssetSymbol}-${fromNetworkId}`,
-                    toAssetId: `${toAssetSymbol}-${finalToNetworkIdForDB}`,
-                    fromAssetSymbol: fromAssetSymbol,
-                    fromNetworkId: fromNetworkId,
-                    toAssetSymbol: toAssetSymbol,
-                    bestExchange: quoteResult.exchangeName,
-                    recipientAddress: recipientAddress,
-                    toNetworkId: finalToNetworkIdForDB,
-                    fromAmount: fromAmount.toString(),
-                    grossReceiveAmount: quoteResult.grossReceiveAmount.toString(),
-                    finalReceiveAmount: finalReceiveAmountForDB,
-                    exchangeRate: responseJson.exchangeRate,
-                    exchangeFee: baseFees.exchangeFee.toString(),
-                    ourFee: baseFees.ourFee.toString(),
-                    gasCosts: baseFees.sourceGasCost.cost.toString(),
-                }
-            });
-            console.log(`[DB] Quote ${quoteId} saved successfully.`);
-        } catch (dbError) {
-            console.error("❌ Failed to save quote to the database:", dbError);
-            throw new Error("Failed to persist the quote. Please try again.");
-        }
-
-        return responseJson;
-    }*/
-
-
     private async buildFinalResponse(
         fromAmount: number,
         fromAssetSymbol: string,
@@ -521,7 +396,7 @@ export class QuotingService {
         baseFees: QuoteFeeDetails,
         finalAmountBase: number
     ) {
-        const quoteId = uuidv4();
+        const quoteId = uuidv4().replace(/-/g, '');
         const expiresAt = new Date(Date.now() + 300000).toISOString();
 
         // --- ۱. اطلاعات شبکه مبدا را برای تصمیم‌گیری می‌گیریم ---
