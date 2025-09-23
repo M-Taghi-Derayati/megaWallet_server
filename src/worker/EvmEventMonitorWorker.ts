@@ -52,28 +52,33 @@ export class EvmEventMonitorWorker {
             const contract = new Contract(network.phoenixContractAddress, PhoenixContractAbi, provider);
 
             console.log(`[EVM Monitor] Subscribed to "NativeTradeInitiated" events on ${network.name} (${network.phoenixContractAddress})`);
-
             // گوش دادن به رویداد "NativeTradeInitiated"
             contract.on("NativeTradeInitiated", (user, amount, quoteId, event: Log) => {
+                const parsedLog = contract.interface.parseLog(event);
+                console.log(`[EVM Monitor] ✅❗️ Event RECEIVED on ${parsedLog}!`);
+                if (parsedLog && parsedLog.name === "NativeTradeInitiated") {
+                    const [user, amount, quoteId] = parsedLog.args;
 
-                console.log(`[EVM Monitor] ❗️ Event received on ${network.name}!`);
+                    console.log(`[EVM Monitor] ✅❗️ Event RECEIVED on ${network.name}!`);
 
-                // استخراج و نمایش داده‌های رویداد
-                const eventArgs: NativeTradeEventArgs = {
-                    user,
-                    amount,
-                    quoteId,
-                    blockNumber: event.blockNumber,
-                    txHash: event.transactionHash
-                };
+                    const eventArgs = {
+                        user,
+                        amount,
+                        quoteId,
+                        blockNumber: event.blockNumber,
+                        txHash: event.transactionHash
+                    };
 
-                this.logEvent(eventArgs);
 
-                // فراخوانی سرویس اجرای معامله با داده‌های رویداد
-                tradeExecutor.executeNativeSwapFromEvent({
-                    ...eventArgs,
-                    networkId: network.id
-                });
+                    this.logEvent(eventArgs);
+
+                    // فراخوانی سرویس اجرای معامله با داده‌های رویداد
+                    tradeExecutor.executeNativeSwapFromEvent({
+                        ...eventArgs,
+                        networkId: network.id
+                    });
+                }
+            }).then(r => {
             });
 
             // ethers v6 به صورت خودکار تلاش برای اتصال مجدد (reconnect) را انجام می‌دهد.
@@ -160,6 +165,8 @@ export class EvmEventMonitorWorker {
             console.error(`[EVM Monitor] Failed to start listener for ${network.name}:`, error);
         }
     }
+
+
 
 
 
