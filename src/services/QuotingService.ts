@@ -8,6 +8,7 @@ import {AssetRegistry} from '../config/AssetRegistry';
 import {BitcoinHDWalletService, NewAddressResult} from './BitcoinHDWalletService';
 import {v4 as uuidv4} from 'uuid';
 import { BitcoinPayoutService } from './BitcoinPayoutService';
+import {ethers} from "ethers";
 
 const prisma = new PrismaClient();
 
@@ -396,7 +397,8 @@ export class QuotingService {
         baseFees: QuoteFeeDetails,
         finalAmountBase: number
     ) {
-        const quoteId = uuidv4().replace(/-/g, '');
+        const quoteId = ethers.randomBytes(32);
+        const quoteIdHex = ethers.hexlify(quoteId); // e.g., "0x
         const expiresAt = new Date(Date.now() + 300000).toISOString();
 
         // --- ۱. اطلاعات شبکه مبدا را برای تصمیم‌گیری می‌گیریم ---
@@ -416,7 +418,7 @@ export class QuotingService {
         }
 
         const responseJson: any = {
-            quoteId: quoteId,
+            quoteId: quoteIdHex,
             fromAmount: fromAmount.toString(),
             fromAssetSymbol: fromAssetSymbol,
             bestExchange: quoteResult.exchangeName,
@@ -481,7 +483,7 @@ export class QuotingService {
                 await tx.quote.create({
                     data: {
                         // ... (تمام فیلدهای شما بدون تغییر)
-                        id: quoteId,
+                        id: quoteIdHex,
                         expiresAt: expiresAt,
                         fromAssetId: `${fromAssetSymbol}-${fromNetworkId}`,
                         toAssetId: `${toAssetSymbol}-${finalToNetworkIdForDB}`,
@@ -508,12 +510,12 @@ export class QuotingService {
                             address: newDepositAddressInfo.address,
                             path: newDepositAddressInfo.path,
                             status: 'PENDING_DEPOSIT',
-                            quoteId: quoteId,
+                            quoteId: quoteIdHex,
                         }
                     });
                 }
             });
-            console.log(`[DB] Quote ${quoteId} saved successfully.`);
+            console.log(`[DB] Quote ${quoteIdHex} saved successfully.`);
         } catch (dbError) {
             console.error("❌ Failed to save quote to the database:", dbError);
             throw new Error("Failed to persist the quote. Please try again.");
