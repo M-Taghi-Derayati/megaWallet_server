@@ -344,7 +344,7 @@ export class TradeExecutionService {
      */
     public async executeNativeSwapFromEvent(eventData: NativeSwapEventData): Promise<void> {
         // ۱. استخراج و تبدیل داده‌های رویداد
-        const decodedQuoteId = ethers.toUtf8String(eventData.quoteId).replace(/\0/g, '');
+        const decodedQuoteId = ethers.decodeBytes32String(eventData.quoteId);
         const receivedAmount = parseFloat(ethers.formatEther(eventData.amount));
 
         console.log(`[Execute Event] Initiating swap for Quote ID: ${decodedQuoteId} from user ${eventData.user}`);
