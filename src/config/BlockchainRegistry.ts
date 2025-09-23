@@ -16,6 +16,7 @@ export interface NetworkConfig {
     explorers:string[]
     iconUrl:string
     forwarderContractAddress:string
+    webSocketUrl:string
     // ... سایر فیلدهای فایل networks.json
 }
 
@@ -123,6 +124,16 @@ export class BlockchainRegistry {
         return this.getNetworkById(targetId);
     }
 
+    /**
+     * --- متد جدید و عمومی ---
+     * لیستی از تمام شبکه‌های پیکربندی شده را بر اساس نوع آنها برمی‌گرداند.
+     * @param networkType نوع شبکه مورد نظر (e.g., "EVM", "BITCOIN").
+     * @returns آرایه‌ای از NetworkConfig ها.
+     */
+    public getNetworksByType(networkType: string): NetworkConfig[] {
+        const allNetworks = Array.from(this.networksById.values());
+        return allNetworks.filter(network => network.networkType.toUpperCase() === networkType.toUpperCase());
+    }
 
     /**
      * یک JsonRpcProvider با تنظیمات بهینه (بدون batching) برای یک شبکه خاص می‌سازد.
@@ -140,4 +151,6 @@ export class BlockchainRegistry {
         // در اینجا می‌توانیم یک کش هم اضافه کنیم تا از ساخت مکرر provider جلوگیری شود.
         return new ethers.JsonRpcProvider(network.rpcUrls[0], undefined, providerOptions);
     }
+
+
 }

@@ -14,7 +14,7 @@
     "webSocketUrl": "wss://sepolia.drpc.org",
     "decimals": 18,
     "currencySymbol": "ETH",
-    "phoenixContractAddress": "0xc897cade702f6c1c57691b6c169febae25f85fad",
+    "phoenixContractAddress": "0xE6da582b8465EdD34B3e5f97932e122e7E739012",
     "forwarderContractAddress": "0xaeae091bb824e3b9e9375fcdd44c9c55cd8be837",
     "blockExplorerUrl": "https://eth-sepolia.blockscout.com",
     "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png"
@@ -34,7 +34,7 @@
     ],
     "decimals": 18,
     "currencySymbol": "tBNB",
-    "phoenixContractAddress": "0xc897cade702f6c1c57691b6c169febae25f85fad",
+    "phoenixContractAddress": "0xE6da582b8465EdD34B3e5f97932e122e7E739012",
     "forwarderContractAddress": "0xaeae091bb824e3b9e9375fcdd44c9c55cd8be837",
     "blockExplorerUrl": "https://testnet.bscscan.com",
     "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png"
@@ -54,7 +54,7 @@
     ],
     "decimals": 18,
     "currencySymbol": "POL",
-    "phoenixContractAddress": "0xc897cade702f6c1c57691b6c169febae25f85fad",
+    "phoenixContractAddress": "0xE6da582b8465EdD34B3e5f97932e122e7E739012",
     "forwarderContractAddress": "0xaeae091bb824e3b9e9375fcdd44c9c55cd8be837",
     "blockExplorerUrl": "https://amoy.polygonscan.com/api",
     "iconUrl": "https://s2.coinmarketcap.com/static/img/coins/64x64/28321.png"

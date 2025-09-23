@@ -6,7 +6,7 @@ import { createServer } from 'http';
 import { initializeWebSocket } from './websocket/WebSocketManager';
 import swapRoutes from './api/v1/swap.routes';
 import { DepositMonitorWorker } from './worker/DepositMonitorWorker';
-
+import { EvmEventMonitorWorker } from './worker/EvmEventMonitorWorker';
 
 const app = express();
 const port =  3000;
@@ -34,7 +34,9 @@ server.listen(port,"0.0.0.0",undefined,() => {
     // --- ۵. شروع Worker ها "بعد" از اینکه سرور با موفقیت راه‌اندازی شد ---
     try {
         const monitorWorker = new DepositMonitorWorker();
+        const evmMonitor = new EvmEventMonitorWorker();
         monitorWorker.start();
+        evmMonitor.start();
 
         // const consolidationWorker = new ConsolidationWorker();
         // consolidationWorker.start();

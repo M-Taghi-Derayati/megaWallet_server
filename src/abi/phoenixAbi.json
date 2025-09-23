@@ -10,11 +10,6 @@
         "internalType": "address",
         "name": "_initialTreasuryWallet",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_trustedForwarder",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -149,18 +144,6 @@
         "internalType": "bytes32",
         "name": "quoteId",
         "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "spender",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "treasury",
-        "type": "address"
       }
     ],
     "name": "TradeExecuted",
@@ -241,25 +224,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "forwarder",
-        "type": "address"
-      }
-    ],
-    "name": "isTrustedForwarder",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "owner",
     "outputs": [
@@ -319,19 +283,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "trustedForwarder",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -339,7 +290,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "usedNativeQuotes",
+    "name": "usedQuotes",
     "outputs": [
       {
         "internalType": "bool",

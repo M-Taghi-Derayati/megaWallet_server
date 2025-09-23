@@ -27,6 +27,14 @@ interface ExecuteTradeParams {
     permitParameters: PermitParameters;
 }
 
+interface NativeSwapEventData {
+    user: string;
+    amount: bigint; // ethers.js رویدادها را با bigint برمی‌گرداند
+    quoteId: string; // این به صورت bytes32 (هگز) است
+    networkId: string; // شناسه شبکه مبدا که رویداد در آن رخ داده
+    txHash: string; // هش تراکنش واریز کاربر
+}
+
 // یک نمونه از Prisma Client برای تعامل با دیتابیس
 const prisma = new PrismaClient();
 
@@ -328,6 +336,114 @@ export class TradeExecutionService {
 
         const valueInUsd = amount * fromPriceUsd;
         return valueInUsd / toPriceUsd;
+    }
+
+    /**
+     * فرآیند سواپ را پس از دریافت رویداد NativeTradeInitiated از بلاک‌چین آغاز می‌کند.
+     * این تابع توسط EvmEventMonitorWorker فراخوانی می‌شود.
+     */
+    public async executeNativeSwapFromEvent(eventData: NativeSwapEventData): Promise<void> {
+        // ۱. استخراج و تبدیل داده‌های رویداد
+        const decodedQuoteId = ethers.decodeBytes32String(eventData.quoteId);
+        const receivedAmount = parseFloat(ethers.formatEther(eventData.amount));
+
+        console.log(`[Execute Event] Initiating swap for Quote ID: ${decodedQuoteId} from user ${eventData.user}`);
+
+        // ۲. بازیابی Quote از دیتابیس
+        const quote = await prisma.quote.findUnique({ where: { id: decodedQuoteId } });
+
+        if (!quote) {
+            console.error(`[Execute Event] CRITICAL: Quote with ID ${decodedQuoteId} not found in DB! Cannot proceed.`);
+            // TODO: یک سیستم هشدار برای ادمین در اینجا باید پیاده‌سازی شود.
+            return;
+        }
+
+        // ۳. ایجاد رکورد Trade
+        // ما چک می‌کنیم که آیا قبلاً یک Trade برای این Quote ساخته شده یا نه تا از تکرار جلوگیری کنیم.
+        const existingTrade = await prisma.trade.findFirst({ where: { quoteId: quote.id } });
+        if (existingTrade) {
+            console.warn(`[Execute Event] Trade for Quote ID ${quote.id} already exists. Skipping.`);
+            return;
+        }
+        const trade = await prisma.trade.create({
+            data: {
+                quoteId: quote.id,
+                status: 'PROCESSING',
+                txHashContractCall: eventData.txHash, // هش تراکنش واریز کاربر
+            }
+        });
+        console.log(`[Trade ${trade.id}] Created for Native Swap with status PROCESSING.`);
+
+        try {
+            // ۴. شبیه‌سازی معامله در صرافی (این بخش همچنان شبیه‌سازی است)
+            console.log(`[Trade ${trade.id}] [SIMULATION] Executing trade on exchange: ${quote.bestExchange}...`);
+
+            // ۵. اجرای پرداخت نهایی واقعی به کاربر
+            const toNetwork = this.registry.getNetworkById(quote.toNetworkId!)!;
+            const toAssetConfig = this.assetRegistry.getAssetBySymbol(quote.toAssetSymbol, quote.toNetworkId!)!;
+            const finalAmountToSend = parseFloat(quote.finalReceiveAmount.toString());
+            const recipientAddress = quote.recipientAddress!;
+
+            // گرد کردن مقدار برای جلوگیری از خطای "too many decimals"
+            const decimals = toAssetConfig.decimals;
+            const roundedAmount = Math.floor(finalAmountToSend * (10 ** decimals)) / (10 ** decimals);
+            const amountToSendString = roundedAmount.toFixed(decimals);
+
+            console.log(`[Trade ${trade.id}] Initiating REAL payout of ${amountToSendString} ${quote.toAssetSymbol}...`);
+
+            let finalTxHash: string;
+            if (toNetwork.networkType === 'EVM' && toNetwork.chainId) {
+                if (toAssetConfig.contractAddress) {
+                    finalTxHash = await this.payoutService.sendErc20Token(
+                        toNetwork.chainId, quote.toAssetSymbol, quote.recipientAddress!!, amountToSendString
+                    );
+                } else {
+                    finalTxHash = await this.payoutService.sendNativeToken(
+                        toNetwork.chainId, quote.recipientAddress!!, amountToSendString
+                    );
+                }
+            } else if (toNetwork.networkType === 'BITCOIN') {
+                // (این بخش نیاز به گرد کردن جداگانه به ساتوشی دارد)
+                const amountBtcRounded = parseFloat(finalAmountToSend.toFixed(8)); // بیت‌کوین ۸ رقم اعشار دارد
+                // **مقصد یک شبکه بیت‌کوین است**
+                finalTxHash = await this.bitcoinPayoutService.sendBitcoin(
+                    quote.recipientAddress!!,
+                    amountBtcRounded
+                );
+            } else {
+                throw new Error(`Unsupported destination network type: ${toNetwork.networkType}`);
+            }
+
+            // ۶. آپدیت نهایی Trade و اطلاع‌رسانی
+            await prisma.trade.update({
+                where: { id: trade.id },
+                data: { status: 'COMPLETED', txHashFinalTransfer: finalTxHash }
+            });
+            console.log(`✅ [Trade ${trade.id}] Native swap from event completed successfully.`);
+
+            getWebSocketManager().broadcast({
+                type: 'TRADE_COMPLETED',
+                tradeId: trade.id,
+                quoteId: quote.id,
+                finalTxHash: finalTxHash
+            });
+
+        } catch (error) {
+            // ۷. مدیریت خطا
+            const errorMessage = (error as Error).message;
+            console.error(`❌ [Trade ${trade.id}] Failed during execution from event:`, errorMessage);
+            await prisma.trade.update({
+                where: { id: trade.id },
+                data: { status: 'FAILED', failureReason: errorMessage }
+            });
+
+            getWebSocketManager().broadcast({
+                type: 'TRADE_FAILED',
+                tradeId: trade.id,
+                quoteId: quote.id,
+                reason: errorMessage
+            });
+        }
     }
 
 
