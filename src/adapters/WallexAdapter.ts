@@ -10,6 +10,7 @@ interface WallexDepthResponse {
 }
 
 export class WallexAdapter implements IExchangeAdapter {
+    public readonly id = 'Wallex';
     public readonly name = 'Wallex';
     private readonly apiKey = process.env.WALLEX_API_KEY;
     private readonly baseUrl = 'https://api.wallex.ir/v1';

@@ -13,6 +13,7 @@ interface OmpfinexDepthResponse {
 }
 
 export class OmpfinexAdapter implements IExchangeAdapter {
+    public readonly id = 'OMPFinex';
     public readonly name = 'OMPFinex';
     private readonly baseUrl = 'https://api.ompfinex.com/v1';
 

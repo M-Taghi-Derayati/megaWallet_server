@@ -1,14 +1,9 @@
-export interface Order {
-    price: number;
-    quantity: number;
-}
+import { OrderBook } from '../types/OrderBook';
 
-export interface OrderBook {
-    bids: Order[];
-    asks: Order[];
-}
+export { Order, OrderBook } from '../types/OrderBook';
 
 export interface IExchangeAdapter {
+    id: string;
     name: string;
     getOrderBook(symbol: string): Promise<OrderBook>;
 }
