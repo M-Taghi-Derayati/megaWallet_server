@@ -1,6 +1,7 @@
 import { IExchangeAdapter } from '../adapters/IExchangeAdapter';
 import { WallexAdapter } from '../adapters/WallexAdapter';
 import { OmpfinexAdapter } from '../adapters/OmpfinexAdapter';
+import { BitpinAdapter } from '../adapters/BitpinAdapter';
 import { AggregatedOrder, AggregatedOrderBook, OrderBook } from '../types/OrderBook';
 
 // در یک پروژه واقعی، می‌توان از Redis برای کش کردن استفاده کرد.
@@ -17,7 +18,7 @@ export class OrderBookAggregatorService {
 
     constructor() {
         // در یک پروژه واقعی، اینها از طریق Dependency Injection تزریق می‌شوند.
-        this.adapters = [new WallexAdapter(), new OmpfinexAdapter()];
+        this.adapters = [new WallexAdapter(), new OmpfinexAdapter(),new BitpinAdapter()];
     }
 
     /**
