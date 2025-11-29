@@ -9,7 +9,7 @@ bitcoin.initEccLib(ecc); // ضروری
 //m/84'/1'/0'/1 //child
 //m/84'/1'/0'/0 //parent
 // ۱. یک mnemonic جدید بسازید (یا mnemonic خودتان را اینجا قرار دهید)
-const mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"; // <<-- از یک mnemonic تستی استفاده کنید
+const mnemonic = "pattern hello embark avocado another banner chest vital ill exercise material pistol"; // <<-- از یک mnemonic تستی استفاده کنید
 console.log("Mnemonic:", mnemonic);
 
 // ۲. mnemonic را به seed تبدیل کنید
