@@ -31,7 +31,7 @@ export class OmpfinexAdapter implements IExchangeAdapter {
                 params: { limit: 200 }, // دریافت ۲۰۰ سطح از عمق بازار
             });
 
-
+            console.log(`[ompfinexAdapter] ${response.data.data.bids.length}`);
             // تبدیل آرایه‌ها به فرمت استاندارد داخلی ما
             const asks: Order[] = response.data.data.asks.map(level => ({
                 price: parseFloat(level[0]),

@@ -24,6 +24,7 @@ export class BitpinAdapter implements IExchangeAdapter {
             console.log(`[bitpinAdapter] Fetching from: ${url}`);
             const response = await axios.get(url);
             const data = response.data;
+            console.log(`[ompfinexAdapter] ${data.bids.length}`);
 
             if (!data || !data.bids || !data.asks) {
                 throw new Error("Invalid response structure from Bitpin API.");

@@ -31,6 +31,8 @@ export class WallexAdapter implements IExchangeAdapter {
                 },
             });
 
+            console.log(`[WallexAdapter] ${response.data.result.bid.length}`);
+
             // تبدیل پاسخ API به فرمت استاندارد داخلی ما
             const asks: Order[] = response.data.result.ask.map(item => ({
                 price: Number(item.price),
