@@ -38,7 +38,7 @@ export class BitpinAdapter implements IExchangeAdapter {
                 quantity: parseFloat(level[1]),
             }));
 
-            return {  asks ,bids};
+            return { asks ,bids};
 
         } catch (error: any) {
             console.error(`[BitpinAdapter] Error fetching order book for ${formattedSymbol}:`, error.message);

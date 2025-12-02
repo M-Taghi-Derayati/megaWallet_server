@@ -22,17 +22,17 @@ export class RamzinexAdapter implements IExchangeAdapter {
             }
 
             // --- منطق پارس کردن (بدون تغییر) ---
-            const bids: Order[] = data.buys.map((level: number[]) => ({
+            const bids: Order[] = data.sells.map((level: number[]) => ({
                 price: level[0],
                 quantity: level[1],
             }));
 
-            const asks: Order[] = data.sells.map((level: number[]) => ({
+            const asks: Order[] = data.buys.map((level: number[]) => ({
                 price: level[0],
                 quantity: level[1],
             }));
 
-            return { bids, asks };
+            return { asks, bids };
 
         } catch (error: any) {
             console.error(`[RamzinexAdapter] Error fetching order book for symbol ${symbol} (ID: ${pairId}):`, error.message);
@@ -51,6 +51,7 @@ export class RamzinexAdapter implements IExchangeAdapter {
         const symbolMap: { [key: string]: number } = {
             'ETHUSDT': 13,   // این یک مثال فرضی است
             'BTCUSDT': 12,   // این یک مثال فرضی است
+            'BNBUSDT': 18,   // این یک مثال فرضی است
         };
 
         const pairId = symbolMap[standardizedSymbol];
