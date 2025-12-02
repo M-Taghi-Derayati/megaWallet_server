@@ -16,7 +16,7 @@ export class RamzinexAdapter implements IExchangeAdapter {
 
             const response = await axios.get(url);
             const data = response.data.data; // <<-- پاسخ رمزینکس یک کلید "data" اضافی ندارد
-            console.log(`[RamzinexAdapter] ${data.bids.length}`);
+            console.log(`[RamzinexAdapter] ${data.sells.length}`);
             if (!data || !data.buys || !data.sells) {
                 throw new Error("Invalid response structure from Ramzinex API.");
             }
