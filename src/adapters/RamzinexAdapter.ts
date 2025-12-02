@@ -21,16 +21,26 @@ export class RamzinexAdapter implements IExchangeAdapter {
                 throw new Error("Invalid response structure from Ramzinex API.");
             }
 
-            // --- منطق پارس کردن (بدون تغییر) ---
-            const bids: Order[] = data.sells.map((level: number[]) => ({
-                price: level[0],
-                quantity: level[1],
-            }));
+            // --- منطق پارس کردن ---
+            // در Ramzinex: sells = سفارشات فروش (asks), buys = سفارشات خرید (bids)
+            // هر دو باید reverse شوند چون از API به صورت معکوس می‌آیند
 
-            const asks: Order[] = data.buys.map((level: number[]) => ({
-                price: level[0],
-                quantity: level[1],
-            }));
+            const bids: Order[] = data.buys
+                .slice()
+                .reverse()
+                .map((level: number[]) => ({
+                    price: parseFloat(String(level[0])),
+                    quantity: parseFloat(String(level[1])),
+                }));
+
+            const asks: Order[] = data.sells
+                .slice()
+                .reverse()
+                .map((level: number[]) => ({
+                    price: parseFloat(String(level[0])),
+                    quantity: parseFloat(String(level[1])),
+                }));
+
 
             return { asks, bids };
 

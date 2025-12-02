@@ -54,15 +54,21 @@ export class OrderBookAggregatorService {
         const allAsks: AggregatedOrder[] = [];
 
         // ۲. اضافه کردن شناسه صرافی به هر سطح از قیمت
-        responses.forEach(response => {
+        responses.forEach((response, index) => {
+            const adapterName = this.adapters[index].name;
             if (response.status === 'fulfilled' && response.value) {
                 const { bids, asks, exchangeId } = response.value;
+                const bidPriceRange = bids.length > 0 ? `${bids[0]?.price} - ${bids[bids.length - 1]?.price}` : 'N/A';
+                const askPriceRange = asks.length > 0 ? `${asks[0]?.price} - ${asks[asks.length - 1]?.price}` : 'N/A';
+                console.log(`[Aggregator] ✅ ${adapterName}: ${bids.length} bids (${bidPriceRange}), ${asks.length} asks (${askPriceRange})`);
                 bids.forEach(bid => allBids.push({ ...bid, exchangeId }));
                 asks.forEach(ask => allAsks.push({ ...ask, exchangeId }));
             } else if (response.status === 'rejected') {
-                console.error(`[Aggregator] Failed to fetch from an exchange:`, response.reason);
+                console.error(`[Aggregator] ❌ ${adapterName} FAILED:`, response.reason.message || response.reason);
             }
         });
+
+        console.log(`[Aggregator] Total aggregated: ${allBids.length} bids, ${allAsks.length} asks`);
 
         // ۳. مرتب‌سازی لیست‌های تجمیع شده
         // Bids (سفارشات خرید) باید از بیشترین قیمت به کمترین مرتب شوند
@@ -72,10 +78,22 @@ export class OrderBookAggregatorService {
         allAsks.sort((a, b) => a.price - b.price);
 
         const aggregatedBook: AggregatedOrderBook = {
-            bids: allBids.splice(0,50),
-            asks: allAsks.splice(0,50),
+            bids: allBids.slice(0, 50),
+            asks: allAsks.slice(0, 50),
             timestamp: Date.now()
         };
+
+        // لاگ توزیع صرافی‌ها در نتیجه نهایی
+        const bidExchanges = aggregatedBook.bids.reduce((acc, bid) => {
+            acc[bid.exchangeId] = (acc[bid.exchangeId] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+        const askExchanges = aggregatedBook.asks.reduce((acc, ask) => {
+            acc[ask.exchangeId] = (acc[ask.exchangeId] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+        console.log('[Aggregator] Final top 50 bids distribution:', bidExchanges);
+        console.log('[Aggregator] Final top 50 asks distribution:', askExchanges);
 
         // ۴. ذخیره نتیجه در کش
         orderBookCache.set(symbol, { data: aggregatedBook, timestamp: Date.now() });
