@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type {IExchangeAdapter, Order, OrderBook} from './IExchangeAdapter';
+import console from "node:console";
 
 // تعریف ساختار پاسخ API OMPFinex
 // پاسخ به صورت [price: string, quantity: string][] است
@@ -24,7 +25,9 @@ export class OmpfinexAdapter implements IExchangeAdapter {
         const marketId = this.getMarketIdForSymbol(symbol);
 
         try {
-            const response = await axios.get<OmpfinexDepthResponse>(`${this.baseUrl}/market/${marketId}/depth`, {
+            const url =`${this.baseUrl}/market/${marketId}/depth`;
+            console.log(`[ompfinexAdapter] Fetching from: ${url}`);
+            const response = await axios.get<OmpfinexDepthResponse>(url, {
                 params: { limit: 200 }, // دریافت ۲۰۰ سطح از عمق بازار
             });
 

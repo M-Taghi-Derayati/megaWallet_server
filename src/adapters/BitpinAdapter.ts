@@ -20,7 +20,9 @@ export class BitpinAdapter implements IExchangeAdapter {
 
         try {
             // ۳. فراخوانی Endpoint
-            const response = await axios.get(`${this.baseUrl}/orderbook/${formattedSymbol}/`);
+            const url =`${this.baseUrl}/orderbook/${formattedSymbol}/`;
+            console.log(`[bitpinAdapter] Fetching from: ${url}`);
+            const response = await axios.get(url);
             const data = response.data;
 
             if (!data || !data.bids || !data.asks) {

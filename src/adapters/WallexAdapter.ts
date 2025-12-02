@@ -21,7 +21,10 @@ export class WallexAdapter implements IExchangeAdapter {
         }
 
         try {
-            const response = await axios.get<WallexDepthResponse>(`${this.baseUrl}/depth`, {
+            const url =`${this.baseUrl}/depth`;
+            console.log(`[WallexAdapter] Fetching from: ${url}`);
+
+            const response = await axios.get<WallexDepthResponse>(url, {
                 params: { symbol },
                 headers: {
                     'x-api-key': this.apiKey,
