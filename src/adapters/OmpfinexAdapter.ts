@@ -28,7 +28,7 @@ export class OmpfinexAdapter implements IExchangeAdapter {
             const url =`${this.baseUrl}/market/${marketId}/depth`;
             console.log(`[ompfinexAdapter] Fetching from: ${url}`);
             const response = await axios.get<OmpfinexDepthResponse>(url, {
-                params: { limit: 200 }, // دریافت ۲۰۰ سطح از عمق بازار
+                params: { limit: 50 }, // دریافت ۲۰۰ سطح از عمق بازار
             });
 
             console.log(`[ompfinexAdapter] ${response.data.data.bids.length}`);

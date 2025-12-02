@@ -72,8 +72,8 @@ export class OrderBookAggregatorService {
         allAsks.sort((a, b) => a.price - b.price);
 
         const aggregatedBook: AggregatedOrderBook = {
-            bids: allBids,
-            asks: allAsks,
+            bids: allBids.splice(0,50),
+            asks: allAsks.splice(0,50),
             timestamp: Date.now()
         };
 
